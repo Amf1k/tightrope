@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"net/http/httputil"
 	"net/url"
+	"sync/atomic"
 )
 
 type Proxy struct {
+	URL     *url.URL
 	Backend *httputil.ReverseProxy
-	Healthy bool //Unused, but can be used to track health status
+	Healthy atomic.Bool
 }
 
 func NewProxy(target string) (*Proxy, error) {
@@ -20,7 +22,8 @@ func NewProxy(target string) (*Proxy, error) {
 	proxy := httputil.NewSingleHostReverseProxy(u)
 
 	return &Proxy{
+		URL:     u,
 		Backend: proxy,
-		Healthy: true,
+		Healthy: atomic.Bool{},
 	}, nil
 }

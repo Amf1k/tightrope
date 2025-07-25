@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 	"tightrope/balancer"
+	"tightrope/healthchecker"
 	"tightrope/proxy"
 	"tightrope/strategy"
 	"time"
@@ -30,6 +31,14 @@ func main() {
 		logger.Error("Failed to create proxy pool", slog.Any("error", err))
 		return
 	}
+
+	hc := healthchecker.New(logger, pool)
+
+	go func() {
+		logger.Info("Starting health checker")
+		hc.Run(ctx)
+		logger.Info("Health checker stopped")
+	}()
 
 	s := strategy.NewRoundRobin(pool)
 

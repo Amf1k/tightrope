@@ -20,15 +20,21 @@ func NewRoundRobin(pool *proxy.Pool) *RoundRobin {
 }
 
 func (r *RoundRobin) NextProxy() *httputil.ReverseProxy {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	if r.pool.Len() == 0 {
+	proxies := r.pool.All()
+	if len(proxies) == 0 {
 		return nil
 	}
 
-	reverseProxy := r.pool.At(r.current)
-	r.current = (r.current + 1) % r.pool.Len()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
-	return reverseProxy.Backend
+	for i := 0; i < len(proxies); i++ {
+		p := proxies[r.current%len(proxies)]
+		r.current++
+		if p.Healthy.Load() {
+			return p.Backend
+		}
+	}
+
+	return nil
 }

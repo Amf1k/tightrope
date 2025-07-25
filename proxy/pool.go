@@ -25,14 +25,11 @@ func NewPool(targets []string) (*Pool, error) {
 	return &Pool{proxies: proxies}, nil
 }
 
-func (p *Pool) Len() int {
+func (p *Pool) All() []*Proxy {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
-	return len(p.proxies)
-}
 
-func (p *Pool) At(i int) *Proxy {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-	return p.proxies[i]
+	copied := make([]*Proxy, len(p.proxies))
+	copy(copied, p.proxies)
+	return copied
 }
